@@ -7,7 +7,7 @@ function sourcesFor(track: Track): string[] {
 }
 
 interface Jukebox {
-  audioRef: RefObject<HTMLAudioElement | null>;
+  audioRef: RefObject<HTMLAudioElement>;  
   /** Spread these on the <audio> element. */
   audioProps: {
     onError: () => void;
@@ -27,7 +27,7 @@ interface Jukebox {
 }
 
 export function useJukebox(tracks: Track[]): Jukebox {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(null!);
   const tracksRef = useRef<Track[]>(tracks);
   tracksRef.current = tracks;
 

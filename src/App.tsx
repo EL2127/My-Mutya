@@ -87,7 +87,8 @@
           <div className="bg-shade" id="bgShade" />
 
           {/* background music */}
-          <audio id="bgMusic" ref={jukebox.audioRef} preload="auto" {...jukebox.audioProps} />
+          <audio id="bgMusic" ref={jukebox.audioRef} 
+          preload="auto" {...jukebox.audioProps} />
           <Jukebox
             hidden={!hasMusic || phase !== 'app'}
             tracks={CONFIG.music}

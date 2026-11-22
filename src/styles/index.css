@@ -7,6 +7,8 @@
     --bg: #22040d;
     --bg-glow: #7a1029;
     --body: "Cormorant Garamond", Georgia, "Times New Roman", serif, "Noto Color Emoji";
+    --side-col: clamp(60px, 18vw, 92px);
+     --col-gap: clamp(4px, 1.6vw, 12px);
 
     /* parchment (the alpha is the "transparent paper" knob: 1 = solid, .7 = very see-through) */
     --paper-a: .86;
@@ -51,12 +53,16 @@
       repeating-linear-gradient(90deg, rgba(0, 0, 0, .24) 0 16px, rgba(255, 255, 255, .03) 16px 34px, transparent 34px 58px),
       radial-gradient(circle at top, var(--bg-glow), var(--bg) 75%);
     background-attachment: fixed;
-    padding-left: max(16px, env(safe-area-inset-left, 0px));
-    padding-right: max(16px, env(safe-area-inset-right, 0px));
+     padding-left: max(clamp(8px, 2.5vw, 16px), env(safe-area-inset-left, 0px));
+    padding-right: max(clamp(8px, 2.5vw, 16px), env(safe-area-inset-right, 0px));
   }
 
   /* ---------- 3. Screens: only the one with .active is shown ---------- */
-  .screen { display: none; min-height: 100dvh; padding-block: 20px; position: relative; z-index: 1; }
+.screen {
+    display: none; min-height: 100dvh; position: relative; z-index: 1;
+    padding-top: max(20px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
+  }
   .screen.active { display: flex; }
 
   /* ---------- 4. Start screen ---------- */
@@ -85,8 +91,8 @@
   #topbar span.current { background: var(--gold-light); }
 
   .layout {
-    display: grid; grid-template-columns: 170px minmax(0, 1fr) 170px;
-    gap: 16px; width: min(900px, 100%); flex: 1; align-items: stretch;
+   display: grid; grid-template-columns: var(--side-col) minmax(0, 1fr) var(--side-col);
+    gap: var(--col-gap); width: min(900px, 100%); flex: 1; align-items: stretch;
   }
 
   /* base button: wine-red with a gold edge */
@@ -112,8 +118,8 @@
   .stage {
     position: relative;
     border-radius: 2px;
-    padding: 36px 32px 26px;
-    min-height: 480px; display: flex; flex-direction: column;
+    padding: clamp(18px, 5vw, 36px) clamp(10px, 3.5vw, 32px) clamp(16px, 4vw, 26px);
+    min-height: clamp(380px, 62dvh, 480px); display: flex; flex-direction: column;
     background:
       var(--grain),
       radial-gradient(ellipse at center, var(--paper-light) 0%, var(--paper-mid) 75%, var(--paper-edge) 100%);
@@ -123,7 +129,7 @@
   }
   /* gold certificate frame: double line outside, thin line inside */
   .stage::before, .stage::after { content: ""; position: absolute; pointer-events: none; }
-  .stage::before { inset: 9px; border: 1px solid rgba(168, 131, 47, .6); border-radius: 1px; }
+ .stage::before { inset: clamp(5px, 1.5vw, 9px); border: 1px solid rgba(168, 131, 47, .6); border-radius: 1px; }
   .stage::after { display: none; }
 
   /* ---------- 6. Panels ---------- */
@@ -143,13 +149,13 @@
     font-family: var(--display); font-style: italic; font-weight: 600; color: var(--wine);
     text-wrap: balance;
   }
-  h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.15; }
-  h2 { font-size: clamp(26px, 4vw, 34px); line-height: 1.15; }
+  h1 { font-size: clamp(24px, 7vw, 40px); line-height: 1.15; }
+  h2 { font-size: clamp(22px, 6.5vw, 34px); line-height: 1.15; }
   h1::after, h2::after { content: none; }
-  #home p, #crown p { font-size: 22px; font-style: italic; font-weight: 600; }
+ #home p, #crown p { font-size: clamp(16px, 4.6vw, 22px); font-style: italic; font-weight: 600; }
 
-  .stage-nav { display: flex; justify-content: space-around; margin-top: 16px; position: relative; z-index: 1; }
-  .stage-nav button { width: 110px; }
+   .stage-nav { display: flex; justify-content: space-around; gap: 8px; margin-top: 16px; position: relative; z-index: 1; }
+  .stage-nav button { width: auto; flex: 1 1 0; max-width: 110px; padding: 10px 6px; }
 
   .crown-big {
     display: grid; place-items: center;
@@ -176,28 +182,28 @@
     width: 300px; height: 300px; transform: translateX(-50%); pointer-events: none;
     background: radial-gradient(circle, rgba(255, 244, 205, .85) 0%, rgba(255, 244, 205, 0) 68%);
   }
-  #crown h2 { font-size: clamp(36px, 6vw, 52px); line-height: 1.05; margin-top: 10px; }
-  #crown .crown-line { font-size: 24px; font-style: italic; font-weight: 700; color: var(--ink); }
-  #crown .crown-hint { font-size: 17px; font-style: italic; font-weight: 600; color: var(--wine); }
+  #crown h2 { font-size: clamp(28px, 8vw, 52px); line-height: 1.05; margin-top: 10px; }
+  #crown .crown-line { font-size: clamp(18px, 5.4vw, 24px); font-style: italic; font-weight: 700; color: var(--ink); }
+  #crown .crown-hint { font-size: clamp(14px, 4vw, 17px); font-style: italic; font-weight: 600; color: var(--wine); }
 
   /* Our Journey counter: gold-trimmed seals */
   .counter { display: flex; gap: 0; flex-wrap: wrap; justify-content: center; }
   .counter div {
-    font-family: var(--body); font-size: 18px; font-style: italic; font-weight: 600; color: var(--ink);
-    padding: 4px 22px; min-width: 88px;
+     font-family: var(--body); font-size: clamp(14px, 3.6vw, 18px); font-style: italic; font-weight: 600; color: var(--ink);
+    padding: 4px clamp(8px, 3vw, 22px); min-width: 0;
     border-left: 1px solid rgba(168, 131, 47, .7);
   }
   .counter div:first-child { border-left: 0; }
   .counter b {
-    display: block; font-family: var(--display); font-style: normal; font-size: 44px; font-weight: 600;
+display: block; font-family: var(--display); font-style: normal; font-size: clamp(28px, 8vw, 44px); font-weight: 600;
     font-variant-numeric: tabular-nums; color: var(--wine); line-height: 1.1;
   }
-  #monthsary { font-size: 24px; font-style: italic; font-weight: 700; color: var(--wine); }
+#monthsary { font-size: clamp(18px, 5vw, 24px); font-style: italic; font-weight: 700; color: var(--wine); }
 
   /* Little things: scroll-like strips */
   #littleList { list-style: none; display: grid; gap: 10px; width: 100%; }
   #littleList li {
-    font-size: 21px; font-style: italic; font-weight: 600; text-align: left; line-height: 1.4;
+       font-size: clamp(16px, 4.4vw, 21px); font-style: italic; font-weight: 600; text-align: left; line-height: 1.4;
     padding: 11px 4px; border-bottom: 1px solid rgba(168, 131, 47, .5);
     opacity: 0; animation: slideIn .6s forwards;
   }
@@ -449,12 +455,12 @@
   /* ---------- 10. Side buttons: square 3D keys (they press down when tapped) ---------- */
   /* contestant number tags: 1-3 sa kaliwa, 4-6 sa kanan (tugma sa ORDER ng pages) */
   .layout { counter-reset: tag; }
-  .side { display: flex; flex-direction: column; gap: 20px; justify-content: space-evenly; align-items: stretch; }
+  .side { display: flex; flex-direction: column; gap: clamp(8px, 2.5vh, 20px); justify-content: space-evenly; align-items: stretch; }
   .side button {
     counter-increment: tag;
     display: grid; justify-items: center; align-content: center; gap: 4px;
-    width: 100%; min-height: 0; padding: 16px 8px;
-    border-radius: 4px; font-size: 16px; line-height: 1.2;
+     width: 100%; min-height: 0; padding: clamp(8px, 2vh, 16px) 2px; overflow-wrap: anywhere;
+    border-radius: 4px; font-size: clamp(9px, 2.7vw, 14px); line-height: 1.2;
     background: var(--wine); /* Solid default */
     color: var(--cream);
     border: 1px solid var(--gold-deep);
@@ -470,12 +476,14 @@
   }
   .side button::before {
     content: counter(tag);
-    font-family: var(--display); font-size: 34px; font-weight: 600; line-height: 1;
+  font-family: var(--display); font-size: clamp(18px, 6vw, 34px); font-weight: 600; line-height: 1;
+
     color: var(--gold-light);
   }
   .side button::before {
     content: counter(tag);
-    font-family: var(--display); font-size: 34px; font-weight: 600; line-height: 1;
+font-family: var(--display); font-size: clamp(18px, 6vw, 34px); font-weight: 600; line-height: 1;
+
     color: var(--gold-light);
   }
   .side button:hover:not(:disabled) { 
@@ -548,7 +556,7 @@
 
   /* ---------- 12. Love letter: wax-sealed envelope + handwriting ---------- */
   .envelope {
-    position: relative; cursor: pointer; padding: 30px 56px 28px; border-radius: 4px;
+    position: relative; cursor: pointer; padding: clamp(20px, 5vw, 30px) clamp(24px, 8vw, 56px) clamp(20px, 5vw, 28px); border-radius: 4px;
     font-family: var(--label); font-weight: 700; letter-spacing: .08em; color: var(--wine);
     background: var(--grain), linear-gradient(#e6cf96, #d3b574);
     border: 2px solid var(--gold-deep);
@@ -562,7 +570,7 @@
   }
   .letter {
     white-space: pre-wrap; text-align: left; width: 100%; max-height: 320px; overflow: auto;
-    font-family: var(--hand); font-size: 25px; font-weight: 600; color: var(--ink);
+ font-family: var(--hand); font-size: clamp(20px, 5.5vw, 25px); font-weight: 600; color: var(--ink);
     line-height: 36px; padding: 0 8px;
     background-image: repeating-linear-gradient(to bottom, transparent 0 35px, rgba(140, 95, 40, .28) 35px 36px);
     background-attachment: local;
@@ -614,21 +622,13 @@
 
   /* ---------- 14. Phone sizes ---------- */
   @media (max-width: 700px) {
-    .layout { grid-template-columns: 92px minmax(0, 1fr) 92px; gap: 8px; }
-    .side { gap: 10px; }
-    .side button { font-size: 12px; padding: 10px 2px; overflow-wrap: anywhere; }
-    .side button::before { font-size: 24px; }
-    .stage { padding: 24px 16px 20px; }
-    .stage::before { inset: 6px; }
+      #app { padding-top: calc(env(safe-area-inset-top, 0px) + 84px); }
     .stage::after { inset: 11px; }
     .envelope { padding: 26px 34px 24px; }
     .letter { font-size: 23px; }
     .jukebox { transform: scale(.72); transform-origin: top right; }
   }
   @media (max-width: 480px) {
-    .layout { grid-template-columns: 78px minmax(0, 1fr) 78px; gap: 6px; }
-    .side button { font-size: 10px; }
-    .side button::before { font-size: 20px; }
     .booth-grid { grid-template-columns: minmax(0, 1fr) 56px; }
     .slots { padding: 4px; gap: 4px; }
     .slot span { font-size: 18px; }
@@ -898,8 +898,9 @@
 
 .theme-toggle-btn {
   position: absolute;
-  top: 20px;
-  left: 20px;
+  top: calc(env(safe-area-inset-top, 0px) + 14px);
+  left: max(12px, env(safe-area-inset-left, 0px));
+
   z-index: 100;
   padding: 8px 16px !important;
   font-size: 12px !important;

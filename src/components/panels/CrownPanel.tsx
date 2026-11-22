@@ -17,7 +17,7 @@ export default function CrownPanel({ active, onBurst }: CrownPanelProps) {
   return (
     <Panel id="crown" active={active}>
       <div
-        className="crown-big"
+        className="crown-big mx-auto"
         id="crownBtn"
         role="button"
         tabIndex={0}
@@ -25,11 +25,11 @@ export default function CrownPanel({ active, onBurst }: CrownPanelProps) {
         onClick={onBurst}
         onKeyDown={onKeyDown}
       >
-      <GoldCrown /> 
+        <GoldCrown />
       </div>
-      <h2>My Mutya</h2>
-      <p className="crown-line">Proud of you, always.</p>
-      <p className="crown-hint">Tap the crown for confetti</p>
+      <h2 className="mb-0">My Mutya</h2>
+      <p className="crown-line mb-0">Proud of you, always.</p>
+      <p className="crown-hint mb-0">Tap the crown for confetti</p>
     </Panel>
   );
 }

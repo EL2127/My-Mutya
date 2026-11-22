@@ -6,6 +6,7 @@
   /* velvet stage */
   --bg: #22040d;
   --bg-glow: #7a1029;
+  --body: "Cormorant Garamond", Georgia, "Times New Roman", serif, "Noto Color Emoji";
 
   /* parchment (the alpha is the "transparent paper" knob: 1 = solid, .7 = very see-through) */
   --paper-a: .86;
@@ -95,9 +96,10 @@ button {
   background: var(--wine);
   border: 1px solid var(--gold-deep);
   border-radius: 2px; padding: 10px 14px; cursor: pointer; text-align: center;
-  transition: background .2s, color .2s;
+  transition: background .2s, color .2s, transform .15s ease;
 }
-button:hover:not(:disabled) { background: var(--red); }
+button:hover:not(:disabled) { background: var(--red); transform: translateY(-2px); }
+button:active:not(:disabled) { transform: translateY(1px) scale(.97); }
 button:disabled { opacity: .4; cursor: not-allowed; }
 button:focus-visible, .crown-big:focus-visible, #envelope:focus-visible, .curtain:focus-visible {
   outline: 3px solid var(--gold-light); outline-offset: 3px;
@@ -133,8 +135,8 @@ button:focus-visible, .crown-big:focus-visible, #envelope:focus-visible, .curtai
 }
 .panel.active { display: flex; }
 @keyframes pop {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from { opacity: 0; transform: translateY(14px) scale(.98); }
+  to   { opacity: 1; transform: none; }
 }
 
 h1, h2 {
@@ -392,7 +394,7 @@ body.has-video .booth { background: #2a0610; text-shadow: none; }
   background: var(--wine); color: var(--cream);
   border: 1px solid var(--gold-deep);
   box-shadow: inset 0 0 0 4px var(--wine), inset 0 0 0 5px rgba(217, 180, 90, .6);
-  transition: background .2s, color .2s;
+  transition: background .2s, color .2s, transform .15s ease;
 }
 .side button::before {
   content: counter(tag);
@@ -539,3 +541,49 @@ body.has-video .booth { background: #2a0610; text-shadow: none; }
 .jb-tracks button[aria-pressed="true"] {
   background: var(--gold-light); color: var(--ink); border-color: var(--gold);
 }
+
+/* ---------- 15. Global animations ---------- */
+
+/* floating gold sparkles over the whole page (above the video, below the content) */
+body::after {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(255, 233, 160, .9) 0 1.5px, transparent 2px),
+    radial-gradient(circle, rgba(255, 233, 160, .6) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(255, 244, 205, .8) 0 2px, transparent 2.5px);
+  background-size: 180px 220px, 120px 150px, 260px 300px;
+  background-position: 0 0, 40px 60px, 90px 20px;
+  opacity: .55;
+  animation: sparkle-drift 60s linear infinite, sparkle-twinkle 4s ease-in-out infinite;
+}
+@keyframes sparkle-drift {
+  to { background-position: 0 -440px, 40px -90px, 90px -580px; }
+}
+@keyframes sparkle-twinkle {
+  50% { opacity: .25; }
+}
+
+/* the paper card and the side keys glide in when the app opens */
+#app.active .stage { animation: stage-in .9s cubic-bezier(.2, .7, .2, 1) backwards; }
+@keyframes stage-in {
+  from { opacity: 0; transform: translateY(24px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+#app.active .side.left button  { animation: key-in-left .6s cubic-bezier(.2, .7, .2, 1) backwards; }
+#app.active .side.right button { animation: key-in-right .6s cubic-bezier(.2, .7, .2, 1) backwards; }
+#app.active .side button:nth-child(2) { animation-delay: .1s; }
+#app.active .side button:nth-child(3) { animation-delay: .2s; }
+@keyframes key-in-left {
+  from { opacity: 0; transform: translateX(-18px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes key-in-right {
+  from { opacity: 0; transform: translateX(18px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* the global "*" reduced-motion rule does not reach ::after, so switch it off here */
+@media (prefers-reduced-motion: reduce) {
+  body::after { animation: none; }
+}
+.ico { display: inline-block; vertical-align: -0.12em; }

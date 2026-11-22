@@ -4,6 +4,8 @@ import { usePhotoBooth } from '../../hooks/usePhotoBooth';
 import { FILTERS, H, W, type FilterName, type Sticker } from '../../utils/canvas';
 import Panel from './Panel';
 import PhotoSlot from './PhotoSlot';
+import { Download, Heart, Sparkles, Undo2 } from 'lucide-react';
+import GoldCrown from '../GoldCrown';
 
 interface BoothPanelProps {
   active: boolean;
@@ -22,13 +24,13 @@ const FILTER_BUTTONS: { name: FilterName; label: string }[] = [
 ];
 
 const STICKER_BUTTONS: { emoji: string; label: string }[] = [
-  { emoji: '👑', label: 'crown' },
-  { emoji: '✨', label: 'sparkle' },
-  { emoji: '💖', label: 'heart' },
-  { emoji: '🌹', label: 'rose' },
-  { emoji: '🎀', label: 'ribbon' },
-  { emoji: '🍒', label: 'cherry' },
-  { emoji: '🦋', label: 'butterfly' },
+  { emoji: '\u{1F451}', label: 'crown' },
+  { emoji: '\u2728', label: 'sparkle' },
+  { emoji: '\u{1F496}', label: 'heart' },
+  { emoji: '\u{1F339}', label: 'rose' },
+  { emoji: '\u{1F380}', label: 'ribbon' },
+  { emoji: '\u{1F352}', label: 'cherry' },
+  { emoji: '\u{1F98B}', label: 'butterfly' },
 ];
 
 export default function BoothPanel({ active, herName, onBurst, onShowVideo, onReset }: BoothPanelProps) {
@@ -74,33 +76,17 @@ export default function BoothPanel({ active, herName, onBurst, onShowVideo, onRe
       <div className="booth">
         {/* top row: back (left) and download (right) */}
         <div className="booth-top">
-          <button
-            type="button"
-            className="icon-btn"
-            id="boothReset"
-            aria-label="Back to homepage"
-            title="Back to homepage"
-            onClick={onReset}
-          >
-            <svg viewBox="0 0 24 24">
-              <path d="M9 14 4 9l5-5" />
-              <path d="M4 9h10a6 6 0 0 1 0 12h-3" />
-            </svg>
+          <button type="button" className="chip" id="boothReset" onClick={onReset}>
+            <Undo2 className="ico" size="1em" aria-hidden /> Back
           </button>
           <button
             type="button"
-            className="icon-btn"
+            className="chip"
             id="boothSave"
-            aria-label="Download strip"
-            title="Download strip"
             disabled={!booth.any}
             onClick={() => void booth.saveStrip()}
           >
-            <svg viewBox="0 0 24 24">
-              <path d="M12 3v12" />
-              <path d="m7 10 5 5 5-5" />
-              <path d="M5 21h14" />
-            </svg>
+            <Download className="ico" size="1em" aria-hidden /> Save strip
           </button>
         </div>
 
@@ -121,9 +107,6 @@ export default function BoothPanel({ active, herName, onBurst, onShowVideo, onRe
                 style={{ filter: FILTERS[booth.filterName] }}
               />
               <canvas id="editCanvas" ref={editCanvasRef} width={W} height={H} hidden={editing === null} />
-              <div className="vf-crown" id="vfCrown" hidden={!(live && booth.crownOn)}>
-                👑
-              </div>
               <div id="stickerLayer">
                 {editingStickers.map((s) => (
                   <span
@@ -169,10 +152,14 @@ export default function BoothPanel({ active, herName, onBurst, onShowVideo, onRe
                 <div className="curtain-panel left" />
                 <div className="curtain-panel right" />
                 <div className="curtain-rod" />
-                <span className="curtain-hint">Swipe or tap to open ✨</span>
+                <span className="curtain-hint">
+                  Swipe or tap to open <Sparkles className="ico" size="1em" aria-hidden />
+                </span>
               </div>
             </div>
-            <p className="polaroid-cap">say cheese 💕</p>
+            <p className="polaroid-cap">
+              say cheese <Heart className="ico" size="1em" aria-hidden />
+            </p>
           </div>
 
           {/* 3 small photo slots */}
@@ -204,7 +191,7 @@ export default function BoothPanel({ active, herName, onBurst, onShowVideo, onRe
             </button>
           ))}
           <button type="button" className="chip" id="crownToggle" aria-pressed={booth.crownOn} onClick={booth.toggleCrown}>
-            Crown 👑
+            <GoldCrown className="ico" /> Crown
           </button>
         </div>
 

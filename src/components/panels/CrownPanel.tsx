@@ -1,6 +1,8 @@
 // src/components/panels/CrownPanel.tsx
 import type { KeyboardEvent } from 'react';
 import Panel from './Panel';
+import GoldCrown from '../GoldCrown';
+
 
 interface CrownPanelProps {
   active: boolean;
@@ -23,7 +25,10 @@ export default function CrownPanel({ active, onBurst }: CrownPanelProps) {
         onClick={onBurst}
         onKeyDown={onKeyDown}
       >
-        👑
+      
+      <GoldCrown />
+
+        M  
       </div>
       <h2>My Mutya</h2>
       <p className="crown-line">Proud of you, always.</p>

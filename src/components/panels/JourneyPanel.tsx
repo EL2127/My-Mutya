@@ -13,7 +13,7 @@ export default function JourneyPanel({ active, startDate }: JourneyPanelProps) {
 
   return (
     <Panel id="years" active={active}>
-      <h2>Our Journey 💕</h2>
+      <h2>Our Journey</h2>
       <div id="counter" className="counter">
         <div>
           <b>{years}</b>year(s)
@@ -25,7 +25,7 @@ export default function JourneyPanel({ active, startDate }: JourneyPanelProps) {
           <b>{days}</b>total days
         </div>
       </div>
-      <p id="monthsary">Happy {ordinal(totalMonths)} monthsary, love! 💕</p>
+      <p id="monthsary">Happy {ordinal(totalMonths)} monthsary, love!</p>
     </Panel>
   );
 }

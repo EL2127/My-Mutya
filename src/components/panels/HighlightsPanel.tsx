@@ -12,7 +12,7 @@ interface HighlightsPanelProps {
 export default function HighlightsPanel({ active, photos }: HighlightsPanelProps) {
   return (
     <Panel id="highlights" active={active}>
-      <h2>Highlights ✨</h2>
+      <h2>Highlights</h2>
       <div id="gallery" className="gallery">
         {photos.length > 0
           ? photos.map((src) => (

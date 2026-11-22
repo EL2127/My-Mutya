@@ -44,7 +44,7 @@ export default function LetterPanel({ active, letter }: LetterPanelProps) {
 
   return (
     <Panel id="letter" active={active}>
-      <h2>Love Letter 💌</h2>
+      <h2>Love Letter</h2>
       <div
         id="envelope"
         className="envelope"

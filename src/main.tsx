@@ -2,6 +2,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import '@fontsource/noto-color-emoji';
 import './styles/index.css';
 
 const rootEl = document.getElementById('root');

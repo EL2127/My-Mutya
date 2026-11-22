@@ -2,28 +2,12 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import type { Track } from '../types';
 
-const DRIVE_RE = /drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:[^#]*&)?id=)([\w-]+)/;
-
-/** One link or file name -> the links to try. A Google Drive share link becomes two direct download links. */
-function expand(src: string): string[] {
-  const m = src.match(DRIVE_RE);
-  if (!m) return [src];
-  return [
-    `https://drive.google.com/uc?export=download&id=${m[1]}`,
-    `https://drive.usercontent.google.com/download?id=${m[1]}&export=download&confirm=t`,
-  ];
-}
-
-/**
- * Everything we can try for one song, in order: its src (file names or links),
- * then its optional drive link as a backup. If one fails to load, the next one is tried.
- */
 function sourcesFor(track: Track): string[] {
-  return [...track.src, ...(track.drive ? [track.drive] : [])].flatMap(expand);
+  return track.src;
 }
 
 interface Jukebox {
-  audioRef: RefObject<HTMLAudioElement>;
+  audioRef: RefObject<HTMLAudioElement | null>;
   /** Spread these on the <audio> element. */
   audioProps: {
     onError: () => void;
@@ -43,97 +27,201 @@ interface Jukebox {
 }
 
 export function useJukebox(tracks: Track[]): Jukebox {
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const tracksRef = useRef<Track[]>(tracks);
+  tracksRef.current = tracks;
+
   const [trackIndex, setTrackIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [failed, setFailed] = useState(false); // every file and link for the song failed
+  const [failed, setFailed] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
 
   const trackIndexRef = useRef(0);
-  const sourceTry = useRef(0); // which link we are trying for the current song
-  const wantPlay = useRef(false); // once the person asked for music, a fallback link keeps playing
+  const sourceTry = useRef(0);
+  const wantPlay = useRef(false);
+  const loadSeq = useRef(0);
+  const initialized = useRef(false);
 
   const onPlayError = useCallback((err: unknown): void => {
+    // Ignore AbortError caused by rapid track switching / load()
+    if (err instanceof DOMException && err.name === 'AbortError') return;
     console.warn('Play failed:', err);
     const name = err instanceof DOMException ? err.name : '';
     setHint(name === 'NotSupportedError' ? 'Song not found' : 'Tap again');
   }, []);
 
+  const safePlay = useCallback(
+    (audio: HTMLAudioElement, seq: number): void => {
+      audio
+        .play()
+        .then(() => {
+          if (seq !== loadSeq.current) return;
+          setPlaying(true);
+          setHint(null);
+        })
+        .catch((err: unknown) => {
+          if (seq !== loadSeq.current) return;
+          onPlayError(err);
+        });
+    },
+    [onPlayError],
+  );
+
   const loadTrack = useCallback(
     (i: number, autoplay: boolean): void => {
       const audio = audioRef.current;
-      if (!audio || tracks.length === 0) return;
-      const idx = (i + tracks.length) % tracks.length; // wraps around at both ends
+      const list = tracksRef.current;
+      if (!audio || list.length === 0) return;
+
+      const seq = ++loadSeq.current;
+      const idx = ((i % list.length) + list.length) % list.length;
+
       trackIndexRef.current = idx;
       setTrackIndex(idx);
       sourceTry.current = 0;
       setFailed(false);
       setHint(null);
-      if (autoplay) wantPlay.current = true;
-      audio.src = sourcesFor(tracks[idx])[0];
+      wantPlay.current = autoplay;
+
+      // Pause first so overlapping audio streams never stack
+      audio.pause();
+
+      const options = sourcesFor(list[idx]);
+      if (!options || options.length === 0) {
+        setFailed(true);
+        return;
+      }
+
+      audio.src = options[0];
       audio.load();
-      if (autoplay) audio.play().catch(onPlayError);
+
+      if (autoplay) {
+        safePlay(audio, seq);
+      }
     },
-    [tracks, onPlayError],
+    [safePlay],
   );
 
-  // Load the first song and set the volume once
+  // Load the first song and set volume once on mount
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || tracks.length === 0) return;
+    if (!audio || tracksRef.current.length === 0 || initialized.current) return;
+    initialized.current = true;
     audio.volume = 0.6;
     loadTrack(0, false);
-  }, [tracks, loadTrack]);
+  }, [loadTrack]);
 
   const onError = useCallback((): void => {
     const audio = audioRef.current;
-    if (!audio || tracks.length === 0) return;
-    const options = sourcesFor(tracks[trackIndexRef.current]);
+    const list = tracksRef.current;
+    if (!audio || list.length === 0) return;
+
+    const seq = loadSeq.current;
+    const options = sourcesFor(list[trackIndexRef.current]);
+
     if (sourceTry.current < options.length - 1) {
-      // This file or link failed: try the next one before giving up
       sourceTry.current++;
+      audio.pause();
       audio.src = options[sourceTry.current];
       audio.load();
-      if (wantPlay.current) audio.play().catch(onPlayError);
+      if (wantPlay.current) {
+        safePlay(audio, seq);
+      }
       return;
     }
+
     console.warn('Music error code:', audio.error?.code ?? '?', '- tried:', options.join('  |  '));
     setFailed(true);
-  }, [tracks, onPlayError]);
+    setPlaying(false);
+  }, [safePlay]);
 
   const toggle = useCallback((): void => {
     const audio = audioRef.current;
-    if (!audio) return;
-    wantPlay.current = audio.paused;
-    if (audio.paused) audio.play().catch(onPlayError);
-    else audio.pause();
-  }, [onPlayError]);
+    const list = tracksRef.current;
+    if (!audio || list.length === 0) return;
+
+    const seq = ++loadSeq.current;
+
+    if (audio.ended) {
+      audio.currentTime = 0;
+    }
+
+    if (audio.paused) {
+      wantPlay.current = true;
+      if (!audio.src) {
+        loadTrack(trackIndexRef.current, true);
+        return;
+      }
+      safePlay(audio, seq);
+    } else {
+      wantPlay.current = false;
+      audio.pause();
+    }
+  }, [loadTrack, safePlay]);
 
   const select = useCallback(
     (index: number): void => {
       const audio = audioRef.current;
       if (!audio) return;
-      if (index === trackIndexRef.current && !audio.paused) audio.pause();
-      else loadTrack(index, true);
+
+      if (index === trackIndexRef.current && !audio.paused) {
+        wantPlay.current = false;
+        audio.pause();
+      } else {
+        loadTrack(index, true);
+      }
     },
     [loadTrack],
   );
 
   const startFromGesture = useCallback((): void => {
     const audio = audioRef.current;
-    if (!audio || tracks.length === 0) return;
+    const list = tracksRef.current;
+    if (!audio || list.length === 0) return;
+
+    // Only start if nothing is currently playing yet
+    if (!audio.paused) return;
+
+    const seq = ++loadSeq.current;
     wantPlay.current = true;
-    audio.play().catch(() => {});
-  }, [tracks]);
+    if (!audio.src) {
+      loadTrack(trackIndexRef.current, true);
+      return;
+    }
+    safePlay(audio, seq);
+  }, [loadTrack, safePlay]);
 
   const audioProps = {
     onError,
-    onEnded: () => loadTrack(trackIndexRef.current + 1, true), // next song, loops the playlist
+    onEnded: () => {
+      const list = tracksRef.current;
+      if (list.length === 0) return;
+
+      if (trackIndexRef.current === list.length - 1) {
+        const audio = audioRef.current;
+        ++loadSeq.current;
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.src = sourcesFor(list[0])[0];
+          audio.load();
+        }
+        setPlaying(false);
+        setTrackIndex(0);
+        trackIndexRef.current = 0;
+        wantPlay.current = false;
+        setHint('Playlist finished');
+      } else {
+        loadTrack(trackIndexRef.current + 1, true);
+      }
+    },
     onPlay: () => {
       setPlaying(true);
       setHint(null);
     },
-    onPause: () => setPlaying(false),
+    onPause: () => {
+      setPlaying(false);
+    },
   };
 
   const current = tracks[trackIndex];

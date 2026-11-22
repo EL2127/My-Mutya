@@ -25,10 +25,7 @@ export default function CrownPanel({ active, onBurst }: CrownPanelProps) {
         onClick={onBurst}
         onKeyDown={onKeyDown}
       >
-      
-      <GoldCrown />
-
-        M  
+      <GoldCrown /> 
       </div>
       <h2>My Mutya</h2>
       <p className="crown-line">Proud of you, always.</p>

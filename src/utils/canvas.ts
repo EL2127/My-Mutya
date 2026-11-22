@@ -64,16 +64,38 @@ export function grab(
 }
 
 /** The photo plus its stickers drawn on top. */
-export function composite(shot: HTMLCanvasElement, stickers: Sticker[]): HTMLCanvasElement {
+export async function composite(shot: HTMLCanvasElement, stickers: Sticker[]): Promise<HTMLCanvasElement> {
   const c = document.createElement('canvas');
   c.width = W;
   c.height = H;
   const ctx = get2d(c);
   ctx.drawImage(shot, 0, 0);
+  
   ctx.font = `${Math.round(W * STICKER_SIZE)}px serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  stickers.forEach((s) => ctx.fillText(s.emoji, s.x * W, s.y * H));
+
+  for (const s of stickers) {
+    if (s.emoji.startsWith('data:image') || s.emoji.startsWith('http') || s.emoji.startsWith('/')) {
+      await new Promise<void>((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = s.emoji;
+        img.onload = () => {
+          const size = W * STICKER_SIZE * 1.5; 
+          ctx.drawImage(img, s.x * W - size / 2, s.y * H - size / 2, size, size);
+          resolve();
+        };
+        img.onerror = () => {
+          console.warn('Failed to load sticker:', s.emoji);
+          resolve(); 
+        };
+      });
+    } else {
+      // Text/Emoji Sticker
+      ctx.fillText(s.emoji, s.x * W, s.y * H);
+    }
+  }
   return c;
 }
 

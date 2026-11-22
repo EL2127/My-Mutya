@@ -56,7 +56,7 @@ export function usePhotoBooth({ herName, active, onBurst, onShowVideo }: Options
   const [shots, setShotsState] = useState<Shots>(() => Array<null>(SLOT_COUNT).fill(null));
   const [stickers, setStickers] = useState<Sticker[][]>(() => Array.from({ length: SLOT_COUNT }, () => []));
   const [filterName, setFilterNameState] = useState<FilterName>('normal');
-  const [crownOn, setCrownOnState] = useState(true);
+  const [crownOn, setCrownOnState] = useState(false); // <-- Pinalitan ng false
   const [live, setLive] = useState(false);
   const [busy, setBusyState] = useState(false);
   const [note, setNote] = useState('');
@@ -73,9 +73,10 @@ export function usePhotoBooth({ herName, active, onBurst, onShowVideo }: Options
   // Refs mirror the state so the async loops (countdowns, shooting) never read stale values
   const streamRef = useRef<MediaStream | null>(null);
   const shotsRef = useRef<Shots>(shots);
+  const rawShotsRef = useRef<Shots>(Array<null>(SLOT_COUNT).fill(null)); // <-- Idinagdag para sa raw photos
   const busyRef = useRef(false);
   const filterRef = useRef<FilterName>('normal');
-  const crownRef = useRef(true);
+  const crownRef = useRef(false);
   const curtainOpenRef = useRef(false);
   const pendingSlot = useRef<number | null>(null);
   const curtainDrag = useRef<CurtainDrag | null>(null);
@@ -92,13 +93,23 @@ export function usePhotoBooth({ herName, active, onBurst, onShowVideo }: Options
     busyRef.current = v;
     setBusyState(v);
   };
-  const setShot = (i: number, canvas: HTMLCanvasElement): void => {
+  const applyFilterToShot = (i: number): void => {
+    const raw = rawShotsRef.current[i];
+    if (!raw) return;
     const next = [...shotsRef.current];
-    next[i] = canvas;
+    // Dito natin ina-apply yung filter at crown sa raw image
+    next[i] = grab(raw, raw.width, raw.height, false, filterRef.current, crownRef.current);
     commitShots(next);
+  };
+
+  const setShot = (i: number, rawCanvas: HTMLCanvasElement): void => {
+    rawShotsRef.current[i] = rawCanvas; // I-save muna ang raw
+    applyFilterToShot(i); // Tapos i-apply yung current filter/crown
     setStickers((prev) => prev.map((list, k) => (k === i ? [] : list)));
   };
+
   const clearShots = (): void => {
+    rawShotsRef.current = Array<null>(SLOT_COUNT).fill(null); // I-clear din yung raw
     commitShots(Array<null>(SLOT_COUNT).fill(null));
     setStickers(Array.from({ length: SLOT_COUNT }, () => []));
     exitEdit();
@@ -198,7 +209,8 @@ export function usePhotoBooth({ herName, active, onBurst, onShowVideo }: Options
   function shootVideo(i: number): void {
     const video = videoRef.current;
     if (!video) return;
-    setShot(i, grab(video, video.videoWidth || W, video.videoHeight || H, true, filterRef.current, crownRef.current));
+    // Pinalitan ng 'normal' at false para raw lang makuha
+    setShot(i, grab(video, video.videoWidth || W, video.videoHeight || H, true, 'normal', false));
     setFlashKey((k) => k + 1);
   }
   const openPhoneCam = (): void => {
@@ -247,7 +259,7 @@ export function usePhotoBooth({ herName, active, onBurst, onShowVideo }: Options
       const im = await loadImage(file);
       const i = pendingSlot.current ?? 0;
       pendingSlot.current = null;
-      setShot(i, grab(im, im.naturalWidth, im.naturalHeight, false, filterRef.current, crownRef.current));
+      setShot(i, grab(im, im.naturalWidth, im.naturalHeight, false, 'normal', false));
       const next = shotsRef.current.findIndex((s) => !s);
       if (next === -1) {
         setNote('All 3 photos are in! Tap the download icon to save your strip.');
@@ -267,7 +279,7 @@ export function usePhotoBooth({ herName, active, onBurst, onShowVideo }: Options
     try {
       for (let i = 0; i < files.length; i++) {
         const im = await loadImage(files[i]);
-        setShot(i, grab(im, im.naturalWidth, im.naturalHeight, false, filterRef.current, crownRef.current));
+        setShot(i, grab(im, im.naturalWidth, im.naturalHeight, false, 'normal', false));
       }
       setNote(
         shotsRef.current.every(Boolean)
@@ -284,10 +296,12 @@ export function usePhotoBooth({ herName, active, onBurst, onShowVideo }: Options
   const setFilter = (name: FilterName): void => {
     filterRef.current = name;
     setFilterNameState(name);
+    if (editing !== null) applyFilterToShot(editing); // I-apply agad kung may naka-select na photo
   };
   const toggleCrown = (): void => {
     crownRef.current = !crownRef.current;
     setCrownOnState(crownRef.current);
+    if (editing !== null) applyFilterToShot(editing); // I-apply agad kung may naka-select na photo
   };
 
   /* ---------- stickers / editing ---------- */
@@ -343,13 +357,24 @@ export function usePhotoBooth({ herName, active, onBurst, onShowVideo }: Options
 
   /* ---------- save ---------- */
   const saveStrip = async (): Promise<void> => {
-    const frames = shotsRef.current.flatMap((s, i) => (s ? [composite(s, stickers[i])] : []));
+    const frames: HTMLCanvasElement[] = [];
+    
+    for (let i = 0; i < shotsRef.current.length; i++) {
+      const shot = shotsRef.current[i];
+      if (shot) {
+        const comp = await composite(shot, stickers[i]);
+        frames.push(comp);
+      }
+    }
+    
     if (!frames.length) return;
+
     try {
-      await document.fonts.load('34px Caveat'); // make sure the handwriting font is ready for the canvas
+      await document.fonts.load('34px Caveat');
     } catch {
       /* the fallback font is fine */
     }
+    
     try {
       const blob = await canvasToBlob(buildStrip(frames, herName));
       const a = document.createElement('a');
@@ -365,7 +390,6 @@ export function usePhotoBooth({ herName, active, onBurst, onShowVideo }: Options
       setNote("The strip couldn't be saved here.");
     }
   };
-
   const clearPhotos = (): void => {
     clearShots();
     setNote('');

@@ -15,10 +15,28 @@ export default function PhotoSlot({ index, shot, stickers, selected, onClick }: 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const ctx = canvasRef.current?.getContext('2d');
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
     if (!ctx) return;
+    
     ctx.clearRect(0, 0, W, H);
-    if (shot) ctx.drawImage(composite(shot, stickers), 0, 0);
+    
+    if (shot) {
+      // Gagamit tayo ng async function para hintayin matapos i-draw yung image stickers
+      let isMounted = true;
+      const draw = async () => {
+        const comp = await composite(shot, stickers);
+        if (isMounted && ctx) {
+          ctx.clearRect(0, 0, W, H); 
+          ctx.drawImage(comp, 0, 0);
+        }
+      };
+      void draw();
+      
+      return () => {
+        isMounted = false; // Cleanup kung mag-unmount habang naglo-load
+      };
+    }
   }, [shot, stickers]);
 
   return (

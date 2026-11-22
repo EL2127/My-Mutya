@@ -19,6 +19,8 @@ export interface AppConfig {
   letter: string;
   /** e.g. ['images/1.jpg', 'images/2.jpg'] (files live in /public/images) */
   photos: string[];
+  carouselPhotos: string[];
   backgroundVideo: string;
+  startVideo: string; // <-- IDAGDAG ITO
   music: Track[];
 }
